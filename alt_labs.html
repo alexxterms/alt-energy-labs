@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alt Energy Labs | The Dark Void</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        void: '#000000',
+                        cherenkov: '#00F0FF', // Electric Neon Blue
+                        cherenkovDim: 'rgba(0, 240, 255, 0.1)',
+                        alert: '#FF2A2A',
+                    },
+                    fontFamily: {
+                        display: ['Orbitron', 'sans-serif'],
+                        mono: ['Space Mono', 'monospace'],
+                    },
+                    backgroundImage: {
+                        'grid-pattern': "linear-gradient(to right, #111 1px, transparent 1px), linear-gradient(to bottom, #111 1px, transparent 1px)",
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+    <!-- Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        body {
+            background-color: #000;
+            color: #fff;
+            overflow-x: hidden;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #000;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #333;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #00F0FF;
+        }
+
+        .glow-text {
+            text-shadow: 0 0 10px rgba(0, 240, 255, 0.7), 0 0 20px rgba(0, 240, 255, 0.5);
+        }
+        .glow-box {
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.3);
+        }
+        
+        /* Animations */
+        @keyframes pulse-opacity {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .animate-pulse-slow {
+            animation: pulse-opacity 3s infinite;
+        }
+
+        .artboard {
+            min-height: 100vh;
+            width: 100%;
+            position: relative;
+            border-bottom: 1px solid #111;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        /* Canvas Positioning */
+        .canvas-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .content-overlay {
+            position: relative;
+            z-index: 10;
+            pointer-events: none; /* Let clicks pass to canvas where needed */
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .pointer-events-auto {
+            pointer-events: auto;
+        }
+
+        /* Range Slider Styling */
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 20px;
+            width: 20px;
+            border-radius: 50%;
+            background: #00F0FF;
+            cursor: pointer;
+            margin-top: -8px;
+            box-shadow: 0 0 10px #00F0FF;
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: #333;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navigation -->
+    <nav class="fixed top-0 left-0 w-full z-50 p-6 flex justify-between items-center mix-blend-difference pointer-events-none">
+        <div class="flex items-center gap-3 pointer-events-auto">
+            <i data-lucide="hexagon" class="text-cherenkov h-8 w-8 animate-pulse-slow"></i>
+            <span class="font-display font-bold text-lg tracking-widest text-white">ALT ENERGY LABS</span>
+        </div>
+        <div class="hidden md:flex gap-6 font-mono text-xs text-gray-400 pointer-events-auto">
+            <a href="#hero" class="hover:text-cherenkov transition-colors">Home</a>
+            <a href="#time-travel" class="hover:text-cherenkov transition-colors">Lifespan</a>
+            <a href="#tech" class="hover:text-cherenkov transition-colors">Tech</a>
+            <a href="#mission" class="hover:text-cherenkov transition-colors">Mission</a>
+            <a href="#applications" class="hover:text-cherenkov transition-colors">Applications</a>
+            <a href="#advantage" class="hover:text-cherenkov transition-colors">Advantage</a>
+            <a href="#vision" class="hover:text-cherenkov transition-colors">Vision</a>
+            <a href="#contact" class="hover:text-cherenkov transition-colors">Contact</a>
+        </div>
+    </nav>
+
+    <!-- ARTBOARD 1: HERO -->
+    <section id="hero" class="artboard bg-void">
+        <div id="hero-canvas" class="canvas-container"></div>
+        
+        <div class="content-overlay">
+            <h1 class="font-display text-5xl md:text-8xl font-black text-center text-transparent bg-clip-text bg-gradient-to-b from-white to-gray-800 tracking-tighter opacity-0 transition-opacity duration-1000 delay-500" id="hero-title">
+                ENERGY SHOULD<br>BE ETERNAL.
+            </h1>
+            
+            <div class="absolute bottom-12 text-center">
+                <p class="font-mono text-cherenkov text-xs uppercase tracking-[0.2em] mb-2 animate-pulse">
+                    <i data-lucide="mouse-pointer-2" class="inline w-3 h-3 mr-1"></i> 
+                    Interact with Light Source
+                </p>
+                <div class="h-12 w-[1px] bg-gradient-to-b from-cherenkov to-transparent mx-auto"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ARTBOARD 5: ZERO-MAINTENANCE REALITY -->
+    <section id="impact" class="artboard bg-black bg-[size:60px_60px] bg-grid-pattern relative">
+        <div class="container mx-auto px-6 max-w-6xl grid md:grid-cols-[1.2fr_0.8fr] gap-12 items-center z-10">
+            <div>
+                <p class="font-mono text-cherenkov text-xs uppercase tracking-[0.3em] mb-4">Maintenance is the enemy</p>
+                <h2 class="font-display text-4xl md:text-6xl font-black text-white leading-tight mb-6">
+                    Perpetual power is not a luxury. It is the only scalable path.
+                </h2>
+                <p class="font-mono text-sm text-gray-400 max-w-2xl">
+                    Chemical batteries force operators to design around failure: servicing hostile environments, swapping
+                    implants, or ending missions early. Our architecture deletes the maintenance line-item forever.
+                </p>
+                <div class="mt-10 grid sm:grid-cols-2 gap-6">
+                    <div class="border border-gray-800 bg-black/60 p-6 glow-box">
+                        <p class="font-display text-2xl text-white mb-2">50+ years</p>
+                        <p class="font-mono text-xs text-gray-400">Continuous output in radiation and deep cold.</p>
+                    </div>
+                    <div class="border border-gray-800 bg-black/60 p-6">
+                        <p class="font-display text-2xl text-white mb-2">Zero recharge</p>
+                        <p class="font-mono text-xs text-gray-400">Sealed systems with no service cycles.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="space-y-6">
+                <div class="border border-gray-800 bg-black/60 p-6">
+                    <h3 class="font-display text-cherenkov text-xl mb-3">Remote autonomy</h3>
+                    <p class="font-mono text-xs text-gray-400">Space, arctic, deep ocean — assets live without sunlight or human access.</p>
+                </div>
+                <div class="border border-gray-800 bg-black/60 p-6">
+                    <h3 class="font-display text-cherenkov text-xl mb-3">Medical reliability</h3>
+                    <p class="font-mono text-xs text-gray-400">Implants operate for decades without invasive replacement.</p>
+                </div>
+                <div class="border border-gray-800 bg-black/60 p-6">
+                    <h3 class="font-display text-cherenkov text-xl mb-3">Industrial scale</h3>
+                    <p class="font-mono text-xs text-gray-400">Trillion-sensor deployments become economically viable.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ARTBOARD 6: APPLICATIONS -->
+    <section id="applications" class="artboard bg-void">
+        <div class="container mx-auto px-6 max-w-6xl">
+            <div class="flex flex-col md:flex-row md:items-end md:justify-between mb-12">
+                <div>
+                    <p class="font-mono text-cherenkov text-xs uppercase tracking-[0.3em] mb-3">Deployment sectors</p>
+                    <h2 class="font-display text-4xl md:text-6xl font-black text-white">Where perpetual power wins</h2>
+                </div>
+                <p class="font-mono text-xs text-gray-500 max-w-md">From defense to life-saving implants, the mission profile shifts when power is constant.</p>
+            </div>
+            <div class="grid md:grid-cols-2 gap-8">
+                <div class="border border-gray-800 bg-black/60 p-8 glow-box">
+                    <h3 class="font-display text-cherenkov text-2xl mb-2">Space & planetary</h3>
+                    <p class="font-mono text-xs text-gray-400">Operate through eclipse cycles and high-radiation events without solar dependencies.</p>
+                </div>
+                <div class="border border-gray-800 bg-black/60 p-8">
+                    <h3 class="font-display text-cherenkov text-2xl mb-2">Defense autonomy</h3>
+                    <p class="font-mono text-xs text-gray-400">Persistent surveillance, silent drones, and unmanned systems that outlast their missions.</p>
+                </div>
+                <div class="border border-gray-800 bg-black/60 p-8">
+                    <h3 class="font-display text-cherenkov text-2xl mb-2">Medical implants</h3>
+                    <p class="font-mono text-xs text-gray-400">Decades-long cardiac and neural implants with zero replacement operations.</p>
+                </div>
+                <div class="border border-gray-800 bg-black/60 p-8">
+                    <h3 class="font-display text-cherenkov text-2xl mb-2">Industrial IoT</h3>
+                    <p class="font-mono text-xs text-gray-400">Remote sensing for pipelines, infrastructure, and frontier logistics.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ARTBOARD 7: ADVANTAGE -->
+    <section id="advantage" class="artboard bg-black bg-[size:60px_60px] bg-grid-pattern">
+        <div class="container mx-auto px-6 max-w-6xl">
+            <p class="font-mono text-cherenkov text-xs uppercase tracking-[0.3em] mb-4">Why Alt wins</p>
+            <h2 class="font-display text-4xl md:text-6xl font-black text-white mb-10">Category creation with a hard-tech moat.</h2>
+            <div class="grid md:grid-cols-3 gap-6">
+                <div class="border border-gray-800 bg-black/60 p-6">
+                    <h3 class="font-display text-cherenkov text-xl mb-3">Diamond-first stack</h3>
+                    <p class="font-mono text-xs text-gray-400">Radiation-hardened semiconductors resist the degradation that ends silicon lifetimes.</p>
+                </div>
+                <div class="border border-gray-800 bg-black/60 p-6">
+                    <h3 class="font-display text-cherenkov text-xl mb-3">Regulatory tailwind</h3>
+                    <p class="font-mono text-xs text-gray-400">New policy unlocks domestic isotopes and a strategic local supply chain.</p>
+                </div>
+                <div class="border border-gray-800 bg-black/60 p-6">
+                    <h3 class="font-display text-cherenkov text-xl mb-3">Process IP</h3>
+                    <p class="font-mono text-xs text-gray-400">Isotope bonding and containment methods create a defensible manufacturing moat.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ARTBOARD 8: ROADMAP -->
+    <section id="vision" class="artboard bg-void">
+        <div class="container mx-auto px-6 max-w-6xl">
+            <p class="font-mono text-cherenkov text-xs uppercase tracking-[0.3em] mb-4">10-year roadmap</p>
+            <h2 class="font-display text-4xl md:text-6xl font-black text-white mb-10">From frontier missions to the trillion-sensor economy.</h2>
+            <div class="grid md:grid-cols-3 gap-6">
+                <div class="border border-gray-800 bg-black/60 p-6">
+                    <p class="font-mono text-cherenkov text-xs uppercase mb-3">Now</p>
+                    <h3 class="font-display text-2xl text-white mb-3">Prove extreme reliability</h3>
+                    <p class="font-mono text-xs text-gray-400">Deploy in defense, space, and critical infrastructure where failure is not an option.</p>
+                </div>
+                <div class="border border-gray-800 bg-black/60 p-6">
+                    <p class="font-mono text-cherenkov text-xs uppercase mb-3">Next</p>
+                    <h3 class="font-display text-2xl text-white mb-3">Scale manufacturing</h3>
+                    <p class="font-mono text-xs text-gray-400">Reduce diamond wafer cost and build certified production for medical-grade devices.</p>
+                </div>
+                <div class="border border-gray-800 bg-black/60 p-6">
+                    <p class="font-mono text-cherenkov text-xs uppercase mb-3">Future</p>
+                    <h3 class="font-display text-2xl text-white mb-3">Power ubiquitous autonomy</h3>
+                    <p class="font-mono text-xs text-gray-400">Enable sealed electronics that outlive their creators across industrial IoT.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ARTBOARD 9: CONTACT -->
+    <section id="contact" class="artboard bg-black">
+        <div class="container mx-auto px-6 max-w-5xl text-center">
+            <p class="font-mono text-cherenkov text-xs uppercase tracking-[0.3em] mb-4">Initiate collaboration</p>
+            <h2 class="font-display text-4xl md:text-6xl font-black text-white mb-6">Let’s architect the next generation of perpetual power.</h2>
+            <p class="font-mono text-sm text-gray-400 max-w-3xl mx-auto mb-10">Share your mission profile and we’ll craft a power roadmap tailored to your operating environment.</p>
+            <div class="flex flex-col md:flex-row gap-4 justify-center">
+                <a href="mailto:partners@altenergylabs.com" class="px-10 py-4 border border-cherenkov text-cherenkov font-display font-bold tracking-widest hover:bg-cherenkov hover:text-black transition-colors">PARTNER WITH US</a>
+                <a href="mailto:research@altenergylabs.com" class="px-10 py-4 border border-gray-700 text-gray-300 font-display font-bold tracking-widest hover:border-cherenkov hover:text-cherenkov transition-colors">REQUEST TECH BRIEF</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- ARTBOARD 2: TIME TRAVEL -->
+    <section id="time-travel" class="artboard bg-black bg-[size:50px_50px] bg-grid-pattern relative">
+        <div class="container mx-auto px-6 grid md:grid-cols-2 gap-12 items-center h-full max-w-6xl z-10">
+            
+            <!-- Left: Battery Comparison -->
+            <div class="space-y-12">
+                <!-- Standard Battery -->
+                <div class="border border-gray-800 bg-gray-900/50 p-8 rounded-sm relative overflow-hidden group">
+                    <div class="flex justify-between items-end mb-4 font-mono text-xs text-gray-500">
+                        <span>STANDARD LI-ION</span>
+                        <span id="std-battery-year">YEAR 3</span>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <i data-lucide="battery-warning" class="w-12 h-12 text-alert" id="battery-icon"></i>
+                        <div class="w-full bg-gray-800 h-2 rounded-full overflow-hidden">
+                            <div id="battery-bar" class="h-full bg-alert w-[20%] transition-all duration-1000"></div>
+                        </div>
+                    </div>
+                    <p class="mt-4 font-mono text-sm text-alert" id="battery-status">CRITICAL FAILURE IMMINENT</p>
+                </div>
+
+                <!-- Diamond Battery -->
+                <div class="border border-cherenkov/30 bg-gray-900/50 p-8 rounded-sm relative overflow-hidden glow-box">
+                    <div class="flex justify-between items-end mb-4 font-mono text-xs text-cherenkov">
+                        <span>ALT DIAMOND BETA</span>
+                        <span>YEAR <span id="diamond-year">50</span></span>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <i data-lucide="diamond" class="w-12 h-12 text-cherenkov animate-pulse-slow"></i>
+                        <div class="w-full bg-gray-800 h-2 rounded-full overflow-hidden">
+                            <div class="h-full bg-cherenkov w-full shadow-[0_0_10px_#00F0FF]"></div>
+                        </div>
+                    </div>
+                    <p class="mt-4 font-mono text-sm text-cherenkov">OUTPUT STABLE. NO DEGRADATION.</p>
+                </div>
+            </div>
+
+            <!-- Right: Counter -->
+            <div class="text-right flex flex-col items-end justify-center pointer-events-none">
+                <p class="font-mono text-cherenkov text-sm mb-2">ELAPSED TIME SIMULATION</p>
+                <div class="font-display text-9xl font-black text-white leading-none tracking-tighter tabular-nums" id="year-counter">
+                    00
+                </div>
+                <div class="font-display text-4xl text-gray-700 font-bold">YEARS</div>
+                
+                <p class="mt-8 font-display text-2xl text-white max-w-md leading-relaxed opacity-0 transition-opacity duration-1000" id="timeless-quote">
+                    "Generations pass. We remain."
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ARTBOARD 3: TECH DEEP DIVE -->
+    <section id="tech" class="artboard bg-void">
+        <div id="tech-canvas" class="canvas-container"></div>
+        
+        <div class="content-overlay justify-end pb-24 pointer-events-none">
+            <div class="pointer-events-auto bg-black/80 backdrop-blur-md border border-gray-800 p-8 max-w-2xl w-full mx-4 relative">
+                <div class="absolute -top-3 left-0 w-full flex justify-center">
+                    <span class="bg-black border border-cherenkov text-cherenkov font-mono text-xs px-2 py-1 uppercase tracking-widest">System Architecture</span>
+                </div>
+
+                <div class="flex justify-between mb-2 font-mono text-xs text-gray-400">
+                    <span>DISASSEMBLED</span>
+                    <span>DEPLOY READY</span>
+                </div>
+                
+                <input type="range" min="0" max="100" value="0" class="w-full mb-6" id="assembly-slider">
+                
+                <div class="grid grid-cols-3 gap-4 text-center font-mono text-xs transition-opacity duration-300" id="tech-labels">
+                    <div class="opacity-100 text-cherenkov">
+                        <strong class="block text-white mb-1">THE FUEL</strong>
+                        Beta Emitters
+                    </div>
+                    <div class="opacity-30">
+                        <strong class="block text-white mb-1">TRANSDUCER</strong>
+                        Semiconductors
+                    </div>
+                    <div class="opacity-30">
+                        <strong class="block text-white mb-1">THE SHIELD</strong>
+                        Zero Leakage
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ARTBOARD 4: MISSION PROFILE -->
+    <section id="mission" class="artboard bg-void relative">
+        <div id="globe-canvas" class="canvas-container"></div>
+        
+        <!-- UI Overlay for Globe -->
+        <div class="absolute top-1/2 left-4 md:left-24 -translate-y-1/2 pointer-events-none z-20">
+            <h2 class="font-display text-4xl md:text-6xl font-bold text-white mb-4">GLOBAL<br>DEPLOYMENT</h2>
+            <div class="flex flex-col gap-4 w-64">
+                <div class="mission-card opacity-50 bg-black/50 border-l-2 border-gray-700 p-4 backdrop-blur-sm transition-all duration-300" id="card-ocean">
+                    <h3 class="font-display text-cherenkov mb-1">DEEP OCEAN</h3>
+                    <p class="font-mono text-xs text-gray-300">Depth: 10km<br>Maint: Impossible<br>Status: <span class="text-cherenkov">Online</span></p>
+                </div>
+                <div class="mission-card opacity-50 bg-black/50 border-l-2 border-gray-700 p-4 backdrop-blur-sm transition-all duration-300" id="card-space">
+                    <h3 class="font-display text-cherenkov mb-1">GEO ORBIT</h3>
+                    <p class="font-mono text-xs text-gray-300">Eclipse: 0s<br>Power: Continuous<br>Link: <span class="text-cherenkov">Stable</span></p>
+                </div>
+                <div class="mission-card opacity-50 bg-black/50 border-l-2 border-gray-700 p-4 backdrop-blur-sm transition-all duration-300" id="card-land">
+                    <h3 class="font-display text-cherenkov mb-1">AUTONOMOUS</h3>
+                    <p class="font-mono text-xs text-gray-300">Mission: 48 Days<br>Fuel: 99.9%<br>Mode: <span class="text-cherenkov">Stealth</span></p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="absolute bottom-10 right-10 font-mono text-xs text-gray-500 text-right pointer-events-none">
+            COORDINATES LOCKED<br>
+            <span class="text-cherenkov">SELECT HOTSPOT ON GLOBE</span>
+        </div>
+    </section>
+
+    <!-- ARTBOARD 10: FOOTER -->
+    <section class="artboard min-h-[50vh] bg-void border-t border-gray-900">
+        <div class="text-center px-6">
+            <h2 class="font-display text-5xl md:text-7xl font-black text-white mb-12 tracking-tighter glow-text">
+                DEPLOY AND<br>DISAPPEAR.
+            </h2>
+            
+            <button class="group relative px-12 py-4 bg-transparent overflow-hidden border border-cherenkov text-cherenkov font-display font-bold text-xl tracking-widest hover:text-black transition-colors duration-300">
+                <span class="absolute inset-0 w-full h-full bg-cherenkov/0 group-hover:bg-cherenkov/100 transition-all duration-300 ease-out transform -skew-x-12 scale-x-0 group-hover:scale-x-150 origin-left"></span>
+                <span class="relative flex items-center gap-2">
+                    INITIATE PROTOCOL
+                    <i data-lucide="chevron-right" class="w-5 h-5"></i>
+                </span>
+            </button>
+            
+            <div class="mt-24 flex flex-col md:flex-row gap-8 justify-center font-mono text-xs text-gray-600">
+                <a href="#" class="hover:text-white transition-colors">CONTACT ENCRYPTED</a>
+                <a href="#" class="hover:text-white transition-colors">LEGAL DISCLAIMER</a>
+                <a href="#" class="hover:text-white transition-colors">INVESTOR RELATIONS</a>
+            </div>
+            
+            <div class="mt-12 text-gray-800 font-mono text-[10px]">
+                &copy; 2049 ALT ENERGY LABS. ETERNAL POWER SYSTEMS.
+            </div>
+        </div>
+    </section>
+
+    <!-- SCRIPTS -->
+    <script>
+        // Initialize Lucide Icons
+        lucide.createIcons();
+
+        // ------------------------------------------------------------------
+        // THREE.JS SETUP
+        // ------------------------------------------------------------------
+        
+        const loader = new THREE.TextureLoader();
+        
+        // --- 1. HERO DIAMOND SCENE ---
+        function initHero() {
+            const container = document.getElementById('hero-canvas');
+            const scene = new THREE.Scene();
+            scene.fog = new THREE.FogExp2(0x000000, 0.05);
+
+            const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+            camera.position.z = 8;
+
+            const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            container.appendChild(renderer.domElement);
+
+            // Diamond Geometry
+            const geometry = new THREE.OctahedronGeometry(2, 2); // Faceted look
+            const material = new THREE.MeshPhysicalMaterial({
+                color: 0xffffff,
+                metalness: 0,
+                roughness: 0,
+                transmission: 0.8, // Glass-like
+                thickness: 2, // Refraction volume
+                clearcoat: 1,
+                clearcoatRoughness: 0,
+                side: THREE.DoubleSide
+            });
+            const diamond = new THREE.Mesh(geometry, material);
+            scene.add(diamond);
+
+            // Wireframe overlay for "Tech" feel
+            const wireGeo = new THREE.OctahedronGeometry(2.01, 2);
+            const wireMat = new THREE.MeshBasicMaterial({ color: 0x00F0FF, wireframe: true, transparent: true, opacity: 0.05 });
+            const wireframe = new THREE.Mesh(wireGeo, wireMat);
+            scene.add(wireframe);
+
+            // Internal Light (The "Soul")
+            const internalLight = new THREE.PointLight(0x00F0FF, 2, 10);
+            scene.add(internalLight);
+
+            // External Lights
+            const ambientLight = new THREE.AmbientLight(0x222222);
+            scene.add(ambientLight);
+            
+            const spotLight = new THREE.SpotLight(0xffffff, 1);
+            spotLight.position.set(5, 10, 5);
+            scene.add(spotLight);
+
+            // Mouse Interaction
+            let mouseX = 0;
+            let mouseY = 0;
+            
+            document.addEventListener('mousemove', (event) => {
+                mouseX = (event.clientX / window.innerWidth) * 2 - 1;
+                mouseY = -(event.clientY / window.innerHeight) * 2 + 1;
+            });
+
+            // Animation Loop
+            function animate() {
+                requestAnimationFrame(animate);
+
+                // Rotate Diamond
+                diamond.rotation.y += 0.002;
+                diamond.rotation.z += 0.001;
+                wireframe.rotation.y = diamond.rotation.y;
+                wireframe.rotation.z = diamond.rotation.z;
+
+                // Move Internal Light based on Mouse
+                internalLight.position.x += (mouseX * 3 - internalLight.position.x) * 0.05;
+                internalLight.position.y += (mouseY * 3 - internalLight.position.y) * 0.05;
+
+                renderer.render(scene, camera);
+            }
+            animate();
+
+            // Resize Handler
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
+
+            // Trigger Fade In
+            setTimeout(() => {
+                document.getElementById('hero-title').style.opacity = '1';
+            }, 500);
+        }
+
+        // --- 2. TIME TRAVEL LOGIC ---
+        function initTimeTravel() {
+            const section = document.getElementById('time-travel');
+            const counterEl = document.getElementById('year-counter');
+            const batteryBar = document.getElementById('battery-bar');
+            const stdYear = document.getElementById('std-battery-year');
+            const diaYear = document.getElementById('diamond-year');
+            const quote = document.getElementById('timeless-quote');
+            const batteryIcon = document.getElementById('battery-icon');
+
+            let started = false;
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting && !started) {
+                        started = true;
+                        animateCounter();
+                    }
+                });
+            }, { threshold: 0.5 });
+
+            observer.observe(section);
+
+            function animateCounter() {
+                let year = 0;
+                const interval = setInterval(() => {
+                    year++;
+                    counterEl.innerText = year < 10 ? `0${year}` : year;
+                    diaYear.innerText = year;
+
+                    // Standard battery degrades
+                    if (year <= 3) {
+                        stdYear.innerText = `YEAR ${year}`;
+                        batteryBar.style.width = `${100 - (year * 30)}%`;
+                    } 
+                    if (year === 4) {
+                        stdYear.innerText = "FAILED";
+                        stdYear.classList.add('text-alert');
+                        batteryBar.style.width = "0%";
+                        batteryIcon.style.opacity = "0.3";
+                    }
+
+                    if (year === 50) {
+                        clearInterval(interval);
+                        quote.style.opacity = 1;
+                    }
+                }, 100); // Speed of count
+            }
+        }
+
+        // --- 3. TECH DEEP DIVE (EXPLODED VIEW) ---
+        let explodeMeshes = [];
+
+        function initTech() {
+            const container = document.getElementById('tech-canvas');
+            const scene = new THREE.Scene();
+            
+            const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 100);
+            camera.position.set(0, 2, 8);
+            camera.lookAt(0, 0, 0);
+
+            const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            container.appendChild(renderer.domElement);
+
+            // Group for all parts
+            const assemblyGroup = new THREE.Group();
+            scene.add(assemblyGroup);
+
+            // 1. Core (Isotope)
+            const coreGeo = new THREE.IcosahedronGeometry(0.8, 1);
+            const coreMat = new THREE.MeshBasicMaterial({ color: 0x00F0FF, wireframe: true });
+            const core = new THREE.Mesh(coreGeo, coreMat);
+            const coreGlow = new THREE.PointLight(0x00F0FF, 1, 5);
+            core.add(coreGlow);
+            assemblyGroup.add(core);
+            explodeMeshes.push({ mesh: core, axis: 'x', dir: 0 }); // Center
+
+            // 2. Transducer Layers (Sandwich)
+            const layerGeo = new THREE.BoxGeometry(0.5, 3, 3);
+            const layerMat = new THREE.MeshPhysicalMaterial({ 
+                color: 0x222222, transmission: 0.5, opacity: 0.8, transparent: true, roughness: 0.2 
+            });
+            
+            const layerLeft = new THREE.Mesh(layerGeo, layerMat);
+            const layerRight = new THREE.Mesh(layerGeo, layerMat);
+            
+            assemblyGroup.add(layerLeft);
+            assemblyGroup.add(layerRight);
+            
+            explodeMeshes.push({ mesh: layerLeft, axis: 'x', dir: -1.5 });
+            explodeMeshes.push({ mesh: layerRight, axis: 'x', dir: 1.5 });
+
+            // 3. Shield/Casing
+            const casingGeo = new THREE.BoxGeometry(4, 4, 4);
+            const casingEdges = new THREE.EdgesGeometry(casingGeo);
+            const casingMat = new THREE.LineBasicMaterial({ color: 0x444444 });
+            
+            const caseLeft = new THREE.LineSegments(casingEdges, casingMat);
+            const caseRight = new THREE.LineSegments(casingEdges, casingMat);
+            
+            // Cut in half visually by scaling? No, just move apart.
+            // Simplified: Two C-brackets
+            
+            assemblyGroup.add(caseLeft);
+            assemblyGroup.add(caseRight);
+
+            explodeMeshes.push({ mesh: caseLeft, axis: 'x', dir: -3.5 });
+            explodeMeshes.push({ mesh: caseRight, axis: 'x', dir: 3.5 });
+
+            // Slider Logic
+            const slider = document.getElementById('assembly-slider');
+            const labels = document.getElementById('tech-labels').children;
+
+            slider.addEventListener('input', (e) => {
+                const val = e.target.value / 100; // 0 to 1
+                
+                // Animate expansion based on inverse of value (100% = val 1 = assembled)
+                // Let's say 0% = Disassembled (exploded), 100% = Assembled (0 pos)
+                // Wait, prompt says: 0% = Core Only (maybe zoomed in?), 50% = Layers, 100% = Locked.
+                // Let's interpret "Assemble":
+                // 0 (Left): Exploded wide.
+                // 100 (Right): Closed tight.
+
+                const expansionFactor = 1 - val;
+
+                explodeMeshes.forEach(item => {
+                    item.mesh.position[item.axis] = item.dir * expansionFactor * 2; // Multiplier for distance
+                });
+
+                // Rotation
+                assemblyGroup.rotation.y = val * Math.PI;
+
+                // Opacity/Highlight Logic for labels
+                for(let i=0; i<3; i++) labels[i].classList.remove('opacity-100', 'text-cherenkov');
+                for(let i=0; i<3; i++) labels[i].classList.add('opacity-30');
+
+                if(val < 0.33) {
+                    labels[0].classList.add('opacity-100', 'text-cherenkov');
+                    labels[0].classList.remove('opacity-30');
+                } else if (val < 0.66) {
+                    labels[1].classList.add('opacity-100', 'text-cherenkov');
+                    labels[1].classList.remove('opacity-30');
+                } else {
+                    labels[2].classList.add('opacity-100', 'text-cherenkov');
+                    labels[2].classList.remove('opacity-30');
+                }
+            });
+
+            // Set initial state
+            slider.dispatchEvent(new Event('input'));
+
+            function animate() {
+                requestAnimationFrame(animate);
+                if(slider.value < 90) assemblyGroup.rotation.y += 0.002; // Idle spin
+                renderer.render(scene, camera);
+            }
+            animate();
+
+             window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
+        }
+
+        // --- 4. MISSION GLOBE ---
+        function initGlobe() {
+            const container = document.getElementById('globe-canvas');
+            const scene = new THREE.Scene();
+            
+            const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+            camera.position.z = 15;
+            camera.position.x = 5; // Offset to leave room for text
+
+            const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            container.appendChild(renderer.domElement);
+
+            const globeGroup = new THREE.Group();
+            scene.add(globeGroup);
+
+            // Sphere
+            const geometry = new THREE.SphereGeometry(4, 32, 32);
+            const material = new THREE.MeshBasicMaterial({ 
+                color: 0x111111, 
+                wireframe: true, 
+                transparent: true, 
+                opacity: 0.3 
+            });
+            const globe = new THREE.Mesh(geometry, material);
+            globeGroup.add(globe);
+            
+            // Add dots/stars for aesthetic
+            const particlesGeo = new THREE.BufferGeometry();
+            const particlesCount = 200;
+            const posArray = new Float32Array(particlesCount * 3);
+            for(let i=0; i<particlesCount*3; i++) {
+                posArray[i] = (Math.random() - 0.5) * 10;
+            }
+            particlesGeo.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+            const particlesMat = new THREE.PointsMaterial({ size: 0.05, color: 0x555555 });
+            const particles = new THREE.Points(particlesGeo, particlesMat);
+            globeGroup.add(particles);
+
+            // Hotspots
+            const hotspots = [
+                { id: 'card-ocean', pos: new THREE.Vector3(3, 2, 2), color: 0x00F0FF },
+                { id: 'card-space', pos: new THREE.Vector3(-3, 3, 0), color: 0x00F0FF }, // Orbiting
+                { id: 'card-land', pos: new THREE.Vector3(1, -2, 3.5), color: 0x00F0FF }
+            ];
+
+            const hotspotMeshes = [];
+
+            hotspots.forEach(h => {
+                const sGeo = new THREE.SphereGeometry(0.2, 16, 16);
+                const sMat = new THREE.MeshBasicMaterial({ color: h.color });
+                const mesh = new THREE.Mesh(sGeo, sMat);
+                mesh.position.copy(h.pos);
+                mesh.userData = { id: h.id };
+                globeGroup.add(mesh);
+                hotspotMeshes.push(mesh);
+                
+                // Add ring
+                const rGeo = new THREE.RingGeometry(0.3, 0.35, 32);
+                const rMat = new THREE.MeshBasicMaterial({ color: h.color, side: THREE.DoubleSide, transparent: true, opacity: 0.5 });
+                const ring = new THREE.Mesh(rGeo, rMat);
+                ring.position.copy(h.pos);
+                ring.lookAt(camera.position);
+                globeGroup.add(ring);
+            });
+
+            // Raycaster
+            const raycaster = new THREE.Raycaster();
+            const mouse = new THREE.Vector2();
+
+            function onMouseMove( event ) {
+                mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+                mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+            }
+            window.addEventListener( 'mousemove', onMouseMove, false );
+
+            function animate() {
+                requestAnimationFrame(animate);
+
+                globe.rotation.y += 0.001;
+                particles.rotation.y += 0.001;
+                
+                // Orbiting effect for Space hotspot
+                const time = Date.now() * 0.001;
+                hotspotMeshes[1].position.x = Math.sin(time) * 4.5;
+                hotspotMeshes[1].position.z = Math.cos(time) * 4.5;
+
+                // Raycasting
+                raycaster.setFromCamera( mouse, camera );
+                const intersects = raycaster.intersectObjects( hotspotMeshes );
+
+                // Reset Cards
+                document.querySelectorAll('.mission-card').forEach(c => {
+                    c.classList.remove('opacity-100', 'border-cherenkov', 'scale-105');
+                    c.classList.add('opacity-50', 'border-gray-700');
+                });
+
+                if ( intersects.length > 0 ) {
+                    const id = intersects[0].object.userData.id;
+                    const card = document.getElementById(id);
+                    if(card) {
+                        card.classList.remove('opacity-50', 'border-gray-700');
+                        card.classList.add('opacity-100', 'border-cherenkov', 'scale-105');
+                    }
+                    document.body.style.cursor = 'pointer';
+                } else {
+                    document.body.style.cursor = 'default';
+                }
+
+                renderer.render(scene, camera);
+            }
+            animate();
+            
+             window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
+        }
+
+        // Initialize Everything
+        window.onload = () => {
+            initHero();
+            initTimeTravel();
+            initTech();
+            initGlobe();
+        };
+
+    </script>
+</body>
+</html>
