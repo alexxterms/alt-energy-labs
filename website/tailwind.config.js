@@ -10,8 +10,9 @@ export default {
         alert: '#FF2A2A',
       },
       fontFamily: {
-        display: ['Orbitron', 'sans-serif'],
-        mono: ['Space Mono', 'monospace'],
+        display: ['Space Grotesk', 'sans-serif'],
+        mono: ['JetBrains Mono', 'monospace'],
+        body: ['Inter', 'sans-serif'],
       },
       backgroundImage: {
         'grid-pattern':
